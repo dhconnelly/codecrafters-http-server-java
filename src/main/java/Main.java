@@ -25,7 +25,7 @@ public class Main {
         System.out.printf("request: [%s]\n", requestLine);
 
         var headers = new HashMap<String, String>();
-        for (String line; !(line = lines.readLine()).isEmpty();) {
+        for (String line; (line = lines.readLine()) != null && !line.isEmpty();) {
             var toks = line.split(": ");
             headers.put(toks[0], toks[1]);
         }
