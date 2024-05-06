@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,6 +23,13 @@ public class Main {
         var lines = new BufferedReader(new InputStreamReader(client.getInputStream()));
         var requestLine = lines.readLine();
         System.out.printf("request: [%s]\n", requestLine);
+
+        var headers = new HashMap<String, String>();
+        for (String line; !(line = lines.readLine()).isEmpty();) {
+            var toks = line.split(": ");
+            headers.put(toks[0], toks[1]);
+        }
+
         var matcher = REQUEST_LINE_PATTERN.matcher(requestLine);
         if (!matcher.matches()) {
             client.getOutputStream().write("HTTP/1.1 400 Bad Request\r\n\r\n".getBytes(US_ASCII));
@@ -31,6 +39,12 @@ public class Main {
         Matcher m;
         if (path.equals("/")) {
             client.getOutputStream().write("HTTP/1.1 200 OK\r\n\r\n".getBytes(US_ASCII));
+        } else if (path.equals("/user-agent")) {
+            String string = headers.get("User-Agent");
+            client.getOutputStream()
+                    .write("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s"
+                            .formatted(string.length(), string)
+                            .getBytes(US_ASCII));
         } else if ((m = ECHO_PATTERN.matcher(path)).matches()) {
             String string = m.group(1);
             client.getOutputStream()
