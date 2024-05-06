@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Main {
@@ -15,6 +16,7 @@ public class Main {
     }
 
     private static final Pattern REQUEST_LINE_PATTERN = Pattern.compile("GET (\\S+) HTTP\\/1.1");
+    private static final Pattern ECHO_PATTERN = Pattern.compile("\\/echo\\/([^\\/]+)");
 
     static void handle(Socket client) throws IOException {
         var lines = new BufferedReader(new InputStreamReader(client.getInputStream()));
@@ -26,12 +28,17 @@ public class Main {
             return;
         }
         var path = matcher.group(1);
+        Matcher m;
         if (path.equals("/")) {
             client.getOutputStream().write("HTTP/1.1 200 OK\r\n\r\n".getBytes(US_ASCII));
-            return;
+        } else if ((m = ECHO_PATTERN.matcher(path)).matches()) {
+            String string = m.group(1);
+            client.getOutputStream()
+                    .write("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s"
+                            .formatted(string.length(), string)
+                            .getBytes(US_ASCII));
         } else {
             client.getOutputStream().write("HTTP/1.1 404 Not Found\r\n\r\n".getBytes(US_ASCII));
-            return;
         }
     }
 
