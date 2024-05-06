@@ -7,6 +7,9 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,12 +27,14 @@ public class Main {
         var requestLine = lines.readLine();
         System.out.printf("request: [%s]\n", requestLine);
 
+        // TODO: parsing
         var headers = new HashMap<String, String>();
         for (String line; (line = lines.readLine()) != null && !line.isEmpty();) {
             var toks = line.split(": ");
             headers.put(toks[0], toks[1]);
         }
 
+        // TODO: routing
         var matcher = REQUEST_LINE_PATTERN.matcher(requestLine);
         if (!matcher.matches()) {
             client.getOutputStream().write("HTTP/1.1 400 Bad Request\r\n\r\n".getBytes(US_ASCII));
@@ -56,13 +61,25 @@ public class Main {
         }
     }
 
-    static void loop(ServerSocket server) {
-        while (true) {
-            try (var client = server.accept()) {
+    static Runnable handler(Socket client) {
+        // TODO: error handling
+        return () -> {
+            try (client) {
                 handle(client);
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        };
+    }
+
+    static void loop(ServerSocket server) throws IOException {
+        var executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        System.out.println("initialized fixed thread pool executor");
+        while (true) {
+            var client = server.accept();
+            System.out.printf("accepted client: %s\n", client.getRemoteSocketAddress());
+            System.out.println("sending to queue");
+            executor.submit(handler(client));
         }
     }
 
