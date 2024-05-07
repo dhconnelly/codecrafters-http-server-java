@@ -39,6 +39,8 @@ public class Server {
         switch (he) {
             case NotFoundException e -> sendStatus(w, StatusCode.NotFound);
             case BadRequestException e -> sendStatus(w, StatusCode.BadRequest);
+            case InternalServerErrorException e -> sendStatus(w,
+                    StatusCode.InternalServerError);
         }
         finishHeaders(w);
         w.flush();

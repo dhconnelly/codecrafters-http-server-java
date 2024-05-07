@@ -1,12 +1,13 @@
 
 enum StatusCode {
-    BadRequest, NotFound, OK;
+    BadRequest, NotFound, OK, InternalServerError;
 
     int code() {
         return switch (this) {
             case BadRequest -> 400;
             case NotFound -> 404;
             case OK -> 200;
+            case InternalServerError -> 500;
         };
     }
 
@@ -15,6 +16,7 @@ enum StatusCode {
             case BadRequest -> "Bad Request";
             case NotFound -> "Not Found";
             case OK -> "OK";
+            case InternalServerError -> "Internal Server Error";
         };
     }
 }

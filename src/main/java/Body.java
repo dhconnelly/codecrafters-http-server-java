@@ -12,7 +12,9 @@ sealed interface Body permits Body.ReaderBody, Body.StringBody {
     final record ReaderBody(BufferedReader r, String contentType,
             long contentLength) implements Body {
         public void write(BufferedWriter w) throws IOException {
-            r.transferTo(w);
+            try (r) {
+                r.transferTo(w);
+            }
         }
     }
 
