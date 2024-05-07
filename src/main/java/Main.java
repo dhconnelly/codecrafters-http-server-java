@@ -53,7 +53,12 @@ public class Main {
                                         params.get("text"), "text/plain")))),
                 new Handler(Pattern.compile("\\/files\\/(?<filename>[^\\/]+)"),
                         List.of("filename"),
-                        (req, params) -> fileHandler(root, req, params)));
+                        (req, params) -> fileHandler(root, req, params)),
+                new Handler(Pattern.compile("\\/user-agent"), List.of(),
+                        (req, params) -> new Response(StatusCode.OK,
+                                Optional.of(new Body.StringBody(
+                                        req.headers().get("User-Agent"),
+                                        "text/plain")))));
     }
 
     public static void main(String[] args) {
