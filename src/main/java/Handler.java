@@ -9,8 +9,7 @@ import java.util.regex.Pattern;
 public class Handler {
     @FunctionalInterface
     interface HttpHandlerFunction {
-        Response handle(Request req, Map<String, String> params)
-                throws HttpException;
+        Response handle(Request req, Map<String, String> params);
     }
 
     private final Pattern p;
@@ -26,21 +25,17 @@ public class Handler {
         this.f = f;
     }
 
-    public Optional<Map<String, String>> match(Method method, String path) {
-        if (!methods.contains(method)) {
+    public Optional<Response> handle(Request req) {
+        if (!methods.contains(req.method())) {
             return Optional.empty();
         }
-        var m = p.matcher(path);
+        var m = p.matcher(req.path());
         if (!m.matches()) {
             return Optional.empty();
         }
-        return Optional.of(
-                params.stream().collect(toMap(Function.identity(), m::group)));
-    }
-
-    public Response handle(Request req, Map<String, String> params)
-            throws HttpException {
-        return f.handle(req, params);
+        var boundParams =
+                params.stream().collect(toMap(Function.identity(), m::group));
+        return Optional.of(f.handle(req, boundParams));
     }
 
 }

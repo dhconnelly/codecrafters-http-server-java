@@ -1,6 +1,5 @@
-
-public final class BadRequestException extends HttpException {
-    BadRequestException(String message) {
+public class BadRequestException extends Exception {
+    public BadRequestException(String message) {
         super(message);
     }
 }

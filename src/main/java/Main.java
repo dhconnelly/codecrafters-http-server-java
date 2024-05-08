@@ -29,19 +29,21 @@ public class Main {
             this.root = root;
         }
 
-        Path checkPath(Path path) throws BadRequestException {
-            path = path.normalize();
-            if (root.relativize(path).startsWith("..")) {
-                throw new BadRequestException("path not contained by root");
-            }
-            return path;
+        Optional<Path> getValidPath(String filename) {
+            Path path = root.resolve(filename).normalize();
+            return root.relativize(path).startsWith("..") ? Optional.empty()
+                    : Optional.of(path);
         }
 
         Response handleFileGet(Path root, Request req,
-                Map<String, String> params) throws HttpException {
-            Path path = checkPath(root.resolve(params.get("filename")));
+                Map<String, String> params) {
+            Optional<Path> validPath = getValidPath(params.get("filename"));
+            if (!validPath.isPresent()) {
+                return new Response(StatusCode.NotFound, Optional.empty());
+            }
+            Path path = validPath.get();
             if (!Files.isReadable(path)) {
-                throw new NotFoundException();
+                return new Response(StatusCode.NotFound, Optional.empty());
             }
             BufferedReader r;
             long size;
@@ -50,9 +52,8 @@ public class Main {
                         new InputStreamReader(Files.newInputStream(path)));
                 size = Files.size(path);
             } catch (IOException e) {
-                e.printStackTrace(System.err);
-                throw new InternalServerErrorException(
-                        "error while reading file");
+                return new Response(StatusCode.InternalServerError,
+                        Optional.empty());
             }
             return new Response(StatusCode.OK, Optional.of(
                     new Body.ReaderBody(r, "application/octet-stream", size)));
@@ -60,40 +61,38 @@ public class Main {
 
         void copy(OutputStream w, InputStream r, int n)
                 throws IOException, BadRequestException {
-            System.out.printf("transferring %d bytes...\n", n);
             byte buf[] = new byte[4096];
             for (int k = 0; k < n;) {
                 int chunk = Math.min(4096, n - k);
-                System.out.printf("reading %d bytes...\n", chunk);
                 int read = r.read(buf, 0, chunk);
-                System.out.printf("read %d bytes\n", read);
                 if (read <= 0) {
                     throw new BadRequestException("can't read enough bytes");
                 }
                 w.write(buf, 0, read);
-                System.out.printf("sent %d bytes...\n", read);
                 k += read;
-                System.out.printf("%d bytes remaining\n", n - k);
             }
         }
 
         Response handleFilePost(Path root, Request req,
-                Map<String, String> params) throws HttpException {
-            Path path = checkPath(root.resolve(params.get("filename")));
+                Map<String, String> params) {
+            Optional<Path> validPath = getValidPath(params.get("filename"));
+            if (!validPath.isPresent()) {
+                return new Response(StatusCode.NotFound, Optional.empty());
+            }
+            Path path = validPath.get();
             int size;
             try {
                 size = Integer.parseInt(req.headers().get("Content-Length"));
             } catch (Exception e) {
-                throw new BadRequestException(
-                        "must specify integer Content-Length");
+                return new Response(StatusCode.BadRequest, Optional.empty());
             }
-            System.out.printf("writing content to disk at %s\n", path);
             try (var w = Files.newOutputStream(path)) {
                 copy(w, req.body(), size);
             } catch (IOException e) {
-                e.printStackTrace(System.err);
-                throw new InternalServerErrorException(
-                        "error while writing file");
+                return new Response(StatusCode.InternalServerError,
+                        Optional.empty());
+            } catch (BadRequestException e) {
+                return new Response(StatusCode.BadRequest, Optional.empty());
             }
             return new Response(StatusCode.Created, Optional.empty());
         }

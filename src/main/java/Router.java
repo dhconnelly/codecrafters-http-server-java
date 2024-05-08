@@ -1,6 +1,6 @@
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 public class Router {
     private final List<Handler> handlers;
@@ -9,23 +9,13 @@ public class Router {
         this.handlers = handlers;
     }
 
-    private static final record HandlerMatch(Handler handler,
-            Map<String, String> params) {
-    }
-
-    private HandlerMatch match(Request req) throws NotFoundException {
+    public Response handle(Request req) throws IOException {
         for (var handler : handlers) {
-            var params = handler.match(req.method(), req.path());
-            if (params.isPresent()) {
-                return new HandlerMatch(handler, params.get());
+            var outcome = handler.handle(req);
+            if (outcome.isPresent()) {
+                return outcome.get();
             }
         }
-        throw new NotFoundException();
+        return new Response(StatusCode.NotFound, Optional.empty());
     }
-
-    public Response handle(Request req) throws HttpException, IOException {
-        var handler = match(req);
-        return handler.handler.handle(req, handler.params);
-    }
-
 }
