@@ -95,7 +95,7 @@ public class Main {
                 throw new InternalServerErrorException(
                         "error while writing file");
             }
-            return new Response(StatusCode.OK, Optional.empty());
+            return new Response(StatusCode.Created, Optional.empty());
         }
     }
 
@@ -120,7 +120,7 @@ public class Main {
                         (req, params) -> fs.handleFilePost(root, req, params)),
                 new Handler(Pattern.compile("\\/user-agent"),
                         List.of(Method.GET), List.of(),
-                        (req, params) -> new Response(StatusCode.Created,
+                        (req, params) -> new Response(StatusCode.OK,
                                 Optional.of(new Body.StringBody(
                                         req.headers().get("User-Agent"),
                                         "text/plain")))));
