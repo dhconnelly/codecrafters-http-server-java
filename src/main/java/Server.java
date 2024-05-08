@@ -1,8 +1,9 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import static java.nio.charset.StandardCharsets.US_ASCII;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
@@ -17,24 +18,24 @@ public class Server {
         this.router = new Router(handlers);
     }
 
-    private void sendStatus(BufferedWriter w, StatusCode status)
+    private void sendStatus(OutputStream w, StatusCode status)
             throws IOException {
         System.out.printf("sending status %s\n", status);
-        w.write("HTTP/1.1 %d %s\r\n".formatted(status.code(),
-                status.message()));
+        w.write("HTTP/1.1 %d %s\r\n".formatted(status.code(), status.message())
+                .getBytes(US_ASCII));
         System.out.printf("done sending status\n");
     }
 
-    private void appendHeader(BufferedWriter w, String key, Object value)
+    private void appendHeader(OutputStream w, String key, Object value)
             throws IOException {
-        w.write("%s: %s\r\n".formatted(key, value));
+        w.write("%s: %s\r\n".formatted(key, value).getBytes(US_ASCII));
     }
 
-    private void finishHeaders(BufferedWriter w) throws IOException {
-        w.write("\r\n");
+    private void finishHeaders(OutputStream w) throws IOException {
+        w.write("\r\n".getBytes(US_ASCII));
     }
 
-    private void sendError(BufferedWriter w, HttpException he)
+    private void sendError(OutputStream w, HttpException he)
             throws IOException {
         switch (he) {
             case NotFoundException e -> sendStatus(w, StatusCode.NotFound);
@@ -46,7 +47,7 @@ public class Server {
         w.flush();
     }
 
-    private void sendResponse(BufferedWriter w, Response resp)
+    private void sendResponse(OutputStream w, Response resp)
             throws IOException {
         System.out.printf("handling done, sending response %s\n", resp);
         sendStatus(w, resp.status());
@@ -62,15 +63,14 @@ public class Server {
         w.flush();
     }
 
-    private void fulfill(BufferedWriter w, BufferedReader r)
-            throws IOException {
+    private void fulfill(OutputStream out, InputStream in) throws IOException {
         try {
-            var req = Request.parseFrom(r);
+            var req = Request.parseFrom(in);
             var resp = router.handle(req);
-            sendResponse(w, resp);
+            sendResponse(out, resp);
         } catch (HttpException he) {
             System.err.printf("error while handling! %s\n", he);
-            sendError(w, he);
+            sendError(out, he);
         }
     }
 
@@ -78,10 +78,8 @@ public class Server {
         final var addr = client.getRemoteSocketAddress();
         System.out.printf("handling client %s\n", addr);
         try (client;
-                var w = new BufferedWriter(
-                        new OutputStreamWriter(client.getOutputStream()));
-                var r = new BufferedReader(
-                        new InputStreamReader(client.getInputStream()))) {
+                var w = new BufferedOutputStream(client.getOutputStream());
+                var r = new BufferedInputStream(client.getInputStream())) {
             System.out.printf("streams established for client %s\n", addr);
             fulfill(w, r);
             System.out.println("http handling done!");

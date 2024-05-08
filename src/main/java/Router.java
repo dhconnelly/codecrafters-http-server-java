@@ -15,7 +15,7 @@ public class Router {
 
     private HandlerMatch match(Request req) throws NotFoundException {
         for (var handler : handlers) {
-            var params = handler.match(req.path());
+            var params = handler.match(req.method(), req.path());
             if (params.isPresent()) {
                 return new HandlerMatch(handler, params.get());
             }

@@ -1,19 +1,23 @@
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 
 sealed interface Body permits Body.ReaderBody, Body.StringBody {
     String contentType();
 
     long contentLength();
 
-    void write(BufferedWriter w) throws IOException;
+    void write(OutputStream w) throws IOException;
 
     final record ReaderBody(BufferedReader r, String contentType,
             long contentLength) implements Body {
-        public void write(BufferedWriter w) throws IOException {
+        public void write(OutputStream out) throws IOException {
             try (r) {
+                var w = new OutputStreamWriter(out);
                 r.transferTo(w);
+                w.flush();
             }
         }
     }
@@ -23,8 +27,8 @@ sealed interface Body permits Body.ReaderBody, Body.StringBody {
             return body.length();
         }
 
-        public void write(BufferedWriter w) throws IOException {
-            w.write(body);
+        public void write(OutputStream w) throws IOException {
+            w.write(body.getBytes(StandardCharsets.US_ASCII));
         }
     }
 }
