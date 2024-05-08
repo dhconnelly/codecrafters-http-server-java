@@ -120,7 +120,7 @@ public class Main {
                         (req, params) -> fs.handleFilePost(root, req, params)),
                 new Handler(Pattern.compile("\\/user-agent"),
                         List.of(Method.GET), List.of(),
-                        (req, params) -> new Response(StatusCode.OK,
+                        (req, params) -> new Response(StatusCode.Created,
                                 Optional.of(new Body.StringBody(
                                         req.headers().get("User-Agent"),
                                         "text/plain")))));
