@@ -77,7 +77,7 @@ public class IntegrationTest {
         var resp = handler.handle(req);
         assertEquals(StatusCode.OK, resp.getStatus());
         assertEquals(USER_AGENT.length(), resp.getBody().contentLength());
-        assertEquals(USER_AGENT, resp.getBody().takeString());
+        assertEquals(USER_AGENT, resp.getBody().asString());
     }
 
     @Test
@@ -86,7 +86,7 @@ public class IntegrationTest {
         var resp = handler.handle(req);
         assertEquals(StatusCode.OK, resp.getStatus());
         assertEquals("foo".length(), resp.getBody().contentLength());
-        assertEquals("foo", resp.getBody().takeString());
+        assertEquals("foo", resp.getBody().asString());
     }
 
     @Test
@@ -100,7 +100,7 @@ public class IntegrationTest {
         assertEquals(StatusCode.OK, resp.getStatus());
         assertEquals("application/octet-stream", resp.getBody().getContentType().get());
         assertEquals("hello".length(), resp.getBody().contentLength());
-        assertEquals("hello", resp.getBody().takeString());
+        assertEquals("hello", resp.getBody().asString());
     }
 
     @Test

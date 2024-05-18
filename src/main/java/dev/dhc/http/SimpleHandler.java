@@ -19,7 +19,7 @@ public class SimpleHandler implements Handler {
     @Override
     public Response handle(Request req) {
         Body body = f.apply(req)
-            .map(s -> (Body) new Body.StringBody(s, "text/plain"))
+            .map(s -> (Body) new Body.StringBody(s))
             .orElse((Body) new Body.EmptyBody());
         return new Response(StatusCode.OK, body);
     }

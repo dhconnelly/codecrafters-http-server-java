@@ -15,7 +15,7 @@ public sealed interface Body permits Body.StreamBody, Body.StringBody, Body.Empt
 
     public void write(OutputStream w) throws IOException;
 
-    public String takeString() throws IOException;
+    public String asString() throws IOException;
 
     public final record EmptyBody() implements Body {
 
@@ -34,7 +34,7 @@ public sealed interface Body permits Body.StreamBody, Body.StringBody, Body.Empt
         }
 
         @Override
-        public String takeString() throws IOException {
+        public String asString() throws IOException {
             return "";
         }
     }
@@ -55,7 +55,7 @@ public sealed interface Body permits Body.StreamBody, Body.StringBody, Body.Empt
         }
 
         @Override
-        public String takeString() throws IOException {
+        public String asString() throws IOException {
             // https://stackoverflow.com/a/35446009
             var s = new Scanner(r).useDelimiter("\\A");
             return s.next();
@@ -67,7 +67,7 @@ public sealed interface Body permits Body.StreamBody, Body.StringBody, Body.Empt
         }
     }
 
-    public final record StringBody(String body, String contentType) implements Body {
+    public final record StringBody(String body) implements Body {
 
         @Override
         public long contentLength() {
@@ -76,7 +76,7 @@ public sealed interface Body permits Body.StreamBody, Body.StringBody, Body.Empt
 
         @Override
         public Optional<String> getContentType() {
-            return Optional.of(contentType);
+            return Optional.of("text/plain");
         }
 
         @Override
@@ -85,7 +85,7 @@ public sealed interface Body permits Body.StreamBody, Body.StringBody, Body.Empt
         }
 
         @Override
-        public String takeString() {
+        public String asString() {
             return body;
         }
     }

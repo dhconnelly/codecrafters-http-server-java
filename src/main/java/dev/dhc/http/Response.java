@@ -26,7 +26,7 @@ public class Response {
         return body;
     }
 
-    public static Response notFound() {
+    static Response notFound() {
         return new Response(StatusCode.NotFound);
     }
 

@@ -36,7 +36,16 @@ public class FileSystemHandler implements Handler {
     }
 
     @Override
-    public Response get(Request req) {
+    public Response handle(Request req) {
+        return switch (req.getMethod()) {
+            case GET ->
+                get(req);
+            case POST ->
+                post(req);
+        };
+    }
+
+    private Response get(Request req) {
         Optional<Path> validPath = getValidPath(req.getParam("filename"));
         if (!validPath.isPresent()) {
             return new Response(StatusCode.NotFound);
@@ -54,12 +63,11 @@ public class FileSystemHandler implements Handler {
             return new Response(StatusCode.InternalServerError);
         }
         return new Response(
-            StatusCode.OK,
-            new Body.StreamBody(r, "application/octet-stream", size));
+                StatusCode.OK,
+                new Body.StreamBody(r, "application/octet-stream", size));
     }
 
-    @Override
-    public Response post(Request req) {
+    private Response post(Request req) {
         Optional<Path> validPath = getValidPath(req.getParam("filename"));
         if (!validPath.isPresent()) {
             return new Response(StatusCode.NotFound);
@@ -75,8 +83,8 @@ public class FileSystemHandler implements Handler {
             copy(w, req.getBody(), size);
             if (Files.size(path) != size) {
                 return new Response(
-                    StatusCode.BadRequest,
-                    new Body.StringBody("bad content length", "text/plain"));
+                        StatusCode.BadRequest,
+                        new Body.StringBody("bad content length"));
             }
         } catch (IOException e) {
             return new Response(StatusCode.InternalServerError);
