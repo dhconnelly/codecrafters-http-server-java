@@ -1,8 +1,9 @@
+package dev.dhc.http;
 
-enum StatusCode {
+public enum StatusCode {
     BadRequest, NotFound, OK, InternalServerError, Created;
 
-    int code() {
+    public int code() {
         return switch (this) {
             case BadRequest -> 400;
             case NotFound -> 404;
@@ -12,7 +13,7 @@ enum StatusCode {
         };
     }
 
-    String message() {
+    public String message() {
         return switch (this) {
             case BadRequest -> "Bad Request";
             case NotFound -> "Not Found";

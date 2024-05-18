@@ -1,14 +1,34 @@
+package dev.dhc.http;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public record Request(String path, Method method, Map<String, String> headers,
-        InputStream body) {
+public class Request {
 
-    private static final Pattern REQUEST_LINE_PAT =
-            Pattern.compile("(GET|POST) (\\S+) HTTP\\/1.1");
+    private final Map<String, String> headers;
+    private final Map<String, String> params;
+    private final String path;
+    private final Method method;
+
+    private InputStream body;
+
+    private Request(Method method, String path, Map<String, String> headers, Map<String, String> params, InputStream body) {
+        this.headers = headers;
+        this.path = path;
+        this.method = method;
+        this.body = body;
+        this.params = params;
+    }
+
+    private Request(Method method, String path, Map<String, String> headers, InputStream body) {
+        this(method, path, headers, Map.of(), body);
+    }
+
+    private static final Pattern REQUEST_LINE_PAT
+            = Pattern.compile("(GET|POST) (\\S+) HTTP\\/1.1");
 
     private static Map.Entry<String, String> parseHeader(String line)
             throws BadRequestException {
@@ -37,7 +57,7 @@ public record Request(String path, Method method, Map<String, String> headers,
         return b.toString();
     }
 
-    static Request parseFrom(InputStream in)
+    public static Request parseFrom(InputStream in)
             throws IOException, BadRequestException {
         var requestLine = readLine(in);
         var matcher = REQUEST_LINE_PAT.matcher(requestLine);
@@ -56,6 +76,32 @@ public record Request(String path, Method method, Map<String, String> headers,
             var kv = parseHeader(s);
             headers.put(kv.getKey(), kv.getValue());
         }
-        return new Request(path, method, headers, in);
+        return new Request(method, path, headers, in);
+    }
+
+    public Request withParams(Map<String, String> params) {
+        return new Request(method, path, headers, params, body);
+    }
+
+    public Method getMethod() {
+        return method;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public InputStream takeBody() {
+        var taken = body;
+        body = null;
+        return taken;
+    }
+
+    public String getHeader(String header) {
+        return headers.get(header);
+    }
+
+    public String getParam(String param) {
+        return params.get(param);
     }
 }
