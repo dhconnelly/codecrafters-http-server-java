@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Scanner;
 
 public sealed interface Body permits Body.StreamBody, Body.StringBody, Body.EmptyBody {
+
     public Optional<String> getContentType();
 
     public long contentLength();
@@ -17,6 +18,7 @@ public sealed interface Body permits Body.StreamBody, Body.StringBody, Body.Empt
     public String takeString() throws IOException;
 
     public final record EmptyBody() implements Body {
+
         @Override
         public Optional<String> getContentType() {
             return Optional.empty();
@@ -39,11 +41,16 @@ public sealed interface Body permits Body.StreamBody, Body.StringBody, Body.Empt
 
     public final record StreamBody(InputStream r, String contentType,
             long contentLength) implements Body {
+
         @Override
         public void write(OutputStream out) throws IOException {
             try (r) {
-                r.transferTo(out);
-                out.flush();
+                long written = r.transferTo(out);
+                if (written != contentLength) {
+                    throw new AssertionError(
+                            "bad content length: expected %d, got %d".formatted(
+                                    contentLength, written));
+                }
             }
         }
 
@@ -53,7 +60,7 @@ public sealed interface Body permits Body.StreamBody, Body.StringBody, Body.Empt
             var s = new Scanner(r).useDelimiter("\\A");
             return s.next();
         }
-    
+
         @Override
         public Optional<String> getContentType() {
             return Optional.of(contentType);
@@ -61,6 +68,7 @@ public sealed interface Body permits Body.StreamBody, Body.StringBody, Body.Empt
     }
 
     public final record StringBody(String body, String contentType) implements Body {
+
         @Override
         public long contentLength() {
             return body.length();

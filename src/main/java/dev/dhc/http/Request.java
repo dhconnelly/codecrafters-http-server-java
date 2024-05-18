@@ -91,10 +91,8 @@ public class Request {
         return path;
     }
 
-    public InputStream takeBody() {
-        var taken = body;
-        body = null;
-        return taken;
+    public InputStream getBody() {
+        return body;
     }
 
     public String getHeader(String header) {

@@ -52,7 +52,9 @@ public class Response {
             appendHeader(w, "Content-Type", body.getContentType().get());
         }
         finishHeaders(w);
-        body.write(w);
+        if (body.contentLength() > 0) {
+            body.write(w);
+        }
         w.flush();
     }
 }

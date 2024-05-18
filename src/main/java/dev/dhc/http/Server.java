@@ -32,7 +32,9 @@ public class Server {
     private void serve(Socket client) {
         final var addr = client.getRemoteSocketAddress();
         try (client;
-                var w = new BufferedOutputStream(client.getOutputStream()); var r = new BufferedInputStream(client.getInputStream())) {
+            var r = new BufferedInputStream(client.getInputStream());
+            var w = new BufferedOutputStream(client.getOutputStream())
+         ) {
             fulfill(w, r);
         } catch (IOException e) {
             System.err.printf("error handling client %s:\n", addr);

@@ -51,7 +51,8 @@ public class IntegrationTest {
         w.flush();
         in.transferTo(out);
         out.flush();
-        return Request.parseFrom(new ByteArrayInputStream(out.toByteArray()));
+        var req = Request.parseFrom(new ByteArrayInputStream(out.toByteArray()));
+        return req;
     }
 
     @Test

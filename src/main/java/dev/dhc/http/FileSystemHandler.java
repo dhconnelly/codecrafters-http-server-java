@@ -71,8 +71,13 @@ public class FileSystemHandler implements Handler {
         } catch (NumberFormatException e) {
             return new Response(StatusCode.BadRequest);
         }
-        try (var w = Files.newOutputStream(path); var body = req.takeBody()) {
-            copy(w, body, size);
+        try (var w = Files.newOutputStream(path)) {
+            copy(w, req.getBody(), size);
+            if (Files.size(path) != size) {
+                return new Response(
+                    StatusCode.BadRequest,
+                    new Body.StringBody("bad content length", "text/plain"));
+            }
         } catch (IOException e) {
             return new Response(StatusCode.InternalServerError);
         } catch (BadRequestException e) {
